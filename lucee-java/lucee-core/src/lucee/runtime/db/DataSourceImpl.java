@@ -43,7 +43,6 @@ public final class DataSourceImpl  extends DataSourceSupport {
     private int port;
     private String connStrTranslated;
     private Struct custom;
-	private boolean validate;
 	private String dbdriver;
     
 	/**
@@ -76,7 +75,7 @@ public final class DataSourceImpl  extends DataSourceSupport {
             int connectionLimit, int connectionTimeout, long metaCacheTimeout, boolean blob, boolean clob, int allow, Struct custom, boolean readOnly,
             boolean validate, boolean storage, TimeZone timezone, String dbdriver) {
 
-		super(name, clazz,username,ConfigWebFactory.decrypt(password),blob,clob,connectionLimit, connectionTimeout, metaCacheTimeout, timezone, allow<0?ALLOW_ALL:allow, storage, readOnly);
+		super(name, clazz,username,ConfigWebFactory.decrypt(password),blob,clob,connectionLimit, connectionTimeout, metaCacheTimeout, timezone, allow<0?ALLOW_ALL:allow, storage, readOnly, validate);
 			
         this.host=host;
         this.database=database;
@@ -84,7 +83,6 @@ public final class DataSourceImpl  extends DataSourceSupport {
         this.port=port;
 
         this.custom=custom;
-        this.validate=validate;
         
         this.connStrTranslated=dsn; 
         translateDsn();
@@ -159,12 +157,12 @@ public final class DataSourceImpl  extends DataSourceSupport {
     
     @Override
     public Object clone() {
-        return new DataSourceImpl(getName(),getClazz(), host, connStr, database, port, getUsername(), getPassword(), getConnectionLimit(), getConnectionTimeout(),getMetaCacheTimeout(), isBlob(), isClob(), allow, custom, isReadOnly(),validate,isStorage(),getTimeZone(), dbdriver);
+        return new DataSourceImpl(getName(),getClazz(), host, connStr, database, port, getUsername(), getPassword(), getConnectionLimit(), getConnectionTimeout(),getMetaCacheTimeout(), isBlob(), isClob(), allow, custom, isReadOnly(),validate(),isStorage(),getTimeZone(), dbdriver);
     }
 
     @Override
     public DataSource cloneReadOnly() {
-        return new DataSourceImpl(getName(),getClazz(), host, connStr, database, port, getUsername(), getPassword(), getConnectionLimit(), getConnectionTimeout(),getMetaCacheTimeout(), isBlob(), isClob(), allow,custom, true,validate,isStorage(),getTimeZone(), dbdriver);
+        return new DataSourceImpl(getName(),getClazz(), host, connStr, database, port, getUsername(), getPassword(), getConnectionLimit(), getConnectionTimeout(),getMetaCacheTimeout(), isBlob(), isClob(), allow,custom, true,validate(),isStorage(),getTimeZone(), dbdriver);
     }
 
     @Override
@@ -181,11 +179,6 @@ public final class DataSourceImpl  extends DataSourceSupport {
     public Struct getCustoms() {
         return (Struct)custom.clone();
     }
-
-    @Override
-    public boolean validate() {
-		return validate;
-	}
 
 	public String getDbDriver() {
 		return dbdriver;

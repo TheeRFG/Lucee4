@@ -141,7 +141,7 @@ public class MSSQL extends CoreSupport {
 		
 		
 		String sql="select rdr_id,rdr_type,rdr_length,rdr_last_modified,rdr_mode,rdr_attributes,rdr_data from "+prefix+"attrs where rdr_full_path_hash=? and rdr_path=? and rdr_name=?";
-		PreparedStatement stat = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+		PreparedStatement stat = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 		stat.setInt(1, fullPathHash);
 		stat.setString(2, path);
 		stat.setString(3, name);
@@ -171,7 +171,7 @@ public class MSSQL extends CoreSupport {
 	@Override
 	public List getAttrs(DatasourceConnection dc, String prefix, int pathHash,String path) throws SQLException {
 		String sql="select rdr_id,rdr_name,rdr_type,rdr_length,rdr_last_modified,rdr_mode,rdr_attributes,rdr_data from "+prefix+"attrs where rdr_path_hash=? and rdr_path=? order by rdr_name";
-		PreparedStatement stat =  prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+		PreparedStatement stat =  prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 		stat.setInt(1, pathHash);
 		stat.setString(2, path);
 		log(sql,pathHash+"",path);
@@ -207,7 +207,7 @@ public class MSSQL extends CoreSupport {
 	public void create(DatasourceConnection dc, String prefix, int fullPatHash,int pathHash,String path, String name, int type) throws SQLException {
 		String sql="insert into "+prefix+"attrs(rdr_type,rdr_path,rdr_name,rdr_full_path_hash,rdr_path_hash,rdr_last_modified,rdr_mode,rdr_attributes,rdr_data,rdr_length) " +
 				"values(?,?,?,?,?,?,?,?,?,?)";
-		PreparedStatement stat = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+		PreparedStatement stat = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 		log(sql);
 		stat.setInt(1,type);
 		stat.setString(2, path);
@@ -233,7 +233,7 @@ public class MSSQL extends CoreSupport {
 		if(attr!=null){
 			String sql="delete from "+prefix+"attrs where rdr_id=?";
 			log(sql,attr.getId()+"");
-			PreparedStatement stat = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+			PreparedStatement stat = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 			stat.setInt(1,attr.getId());
 			
 			//try{
@@ -246,7 +246,7 @@ public class MSSQL extends CoreSupport {
 			if(attr.getData()>0) {
 				sql="delete from "+prefix+"data where rdr_id=?";
 				log(sql,attr.getData()+"");
-				stat = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+				stat = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 				stat.setInt(1,attr.getData());
 				//try{
 					stat.executeUpdate();
@@ -265,7 +265,7 @@ public class MSSQL extends CoreSupport {
 		
 		String sql="select rdr_data from "+prefix+"data where rdr_id=?";
 		log(sql,attr.getData()+"");
-		PreparedStatement stat = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+		PreparedStatement stat = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 		stat.setInt(1,attr.getData());
 
 		ResultSet rs=null;
@@ -315,7 +315,7 @@ public class MSSQL extends CoreSupport {
 		ResultSet rs=null;
 		//try{
 			//Connection conn = dc.getConnection();
-			stat1 = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+			stat1 = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 			if(append) {
 				stat1.setInt(1, attr.getData());
 				stat1.setBinaryStream(2, is,-1);
@@ -329,14 +329,14 @@ public class MSSQL extends CoreSupport {
 			// select
 			sql="select dataLength(rdr_data) as DataLen from "+prefix+"data where rdr_id=?";
 			log(sql);
-			stat2=prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+			stat2=prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 			stat2.setInt(1, attr.getData());
 			rs=stat2.executeQuery();
 			
 			if(rs.next()){	
 				sql="update "+prefix+"attrs set rdr_length=? where rdr_id=?";
 				log(sql);
-				stat3 = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+				stat3 = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 				stat3.setInt(1, rs.getInt(1));
 				stat3.setInt(2, attr.getId());
 				stat3.executeUpdate();
@@ -359,21 +359,21 @@ public class MSSQL extends CoreSupport {
 			String sql="insert into "+prefix+"data (rdr_data) values(?)";
 			log(sql);
 			//Connection conn = dc.getConnection();
-			stat1 = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+			stat1 = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 			stat1.setBinaryStream(1, is,-1);
 			stat1.execute();
 			
 			// select
 			sql="select TOP 1 rdr_id,dataLength(rdr_data) as DataLen from "+prefix+"data order by rdr_id desc";
 			log(sql);
-			stat2=prepareStatement(dc, sql);//conn.createStatement();
+			stat2=prepareFastStatement(dc, sql);//conn.createStatement();
 			rs=stat2.executeQuery();
 			
 			// update
 			if(rs.next()){
 				sql="update "+prefix+"attrs set rdr_data=?,rdr_length=? where rdr_id=?";
 				log(sql);
-				stat3 = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+				stat3 = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 				stat3.setInt(1, rs.getInt(1));
 				stat3.setInt(2,rs.getInt(2));
 				stat3.setInt(3, attr.getId());
@@ -398,7 +398,7 @@ public class MSSQL extends CoreSupport {
 		log(sql);
 		PreparedStatement stat=null;
 		//try{
-			stat = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+			stat = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 			stat.setTimestamp(1, new Timestamp(time),getCalendar());
 			stat.setInt(2, attr.getId());
 			stat.executeUpdate();
@@ -415,7 +415,7 @@ public class MSSQL extends CoreSupport {
 		log(sql);
 		PreparedStatement stat=null;
 		//try{
-			stat = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+			stat = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 			stat.setInt(1, mode);
 			stat.setInt(2, attr.getId());
 			stat.executeUpdate();
@@ -432,7 +432,7 @@ public class MSSQL extends CoreSupport {
 		log(sql);
 		PreparedStatement stat=null;
 		//try{
-			stat = prepareStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
+			stat = prepareFastStatement(dc, sql);//dc.getConnection().prepareStatement(sql);
 			stat.setInt(1, attributes);
 			stat.setInt(2, attr.getId());
 			stat.executeUpdate();
@@ -445,5 +445,12 @@ public class MSSQL extends CoreSupport {
 	@Override
 	public boolean concatSupported() {
 		return true;
+	}
+	
+	private PreparedStatement prepareFastStatement( DatasourceConnection dc, String sql) throws SQLException {
+		PreparedStatement statement = prepareStatement(dc, sql);
+		statement.execute("SET ARITHABORT ON");
+		return statement;
+		
 	}
 }

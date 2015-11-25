@@ -31,24 +31,24 @@ public class ApplicationDataSource extends DataSourceSupport {
 	private String connStr;
 
 	private ApplicationDataSource(String name, String className, String connStr, String username, String password,
-			boolean blob, boolean clob, int connectionLimit, int connectionTimeout, long metaCacheTimeout, TimeZone timezone, int allow, boolean storage, boolean readOnly) throws ClassException {
+			boolean blob, boolean clob, int connectionLimit, int connectionTimeout, long metaCacheTimeout, TimeZone timezone, int allow, boolean storage, boolean readOnly, boolean validate) throws ClassException {
 		this(name, toClass(className), connStr, username, password,
-				blob, clob, connectionLimit, connectionTimeout, metaCacheTimeout, timezone, allow, storage, readOnly);
+				blob, clob, connectionLimit, connectionTimeout, metaCacheTimeout, timezone, allow, storage, readOnly, validate);
 	}
 
 	private ApplicationDataSource(String name, Class clazz, String connStr, String username, String password,
-			boolean blob, boolean clob, int connectionLimit, int connectionTimeout, long metaCacheTimeout, TimeZone timezone, int allow, boolean storage, boolean readOnly) {
+			boolean blob, boolean clob, int connectionLimit, int connectionTimeout, long metaCacheTimeout, TimeZone timezone, int allow, boolean storage, boolean readOnly, boolean validate) {
 		super(name, clazz,username,ConfigWebFactory.decrypt(password),
-				blob,clob,connectionLimit, connectionTimeout, metaCacheTimeout, timezone, allow<0?ALLOW_ALL:allow, storage, readOnly);
+				blob,clob,connectionLimit, connectionTimeout, metaCacheTimeout, timezone, allow<0?ALLOW_ALL:allow, storage, readOnly, validate);
 		
 		this.connStr = connStr;
 	}
 	
 
 	public static DataSource getInstance(String name, String className, String connStr, String username, String password,
-			boolean blob, boolean clob, int connectionLimit, int connectionTimeout, long metaCacheTimeout, TimeZone timezone, int allow, boolean storage, boolean readOnly) throws ClassException {
+			boolean blob, boolean clob, int connectionLimit, int connectionTimeout, long metaCacheTimeout, TimeZone timezone, int allow, boolean storage, boolean readOnly, boolean validate) throws ClassException {
 		
-		return new ApplicationDataSource(name, className, connStr, username, password, blob, clob, connectionLimit, connectionTimeout, metaCacheTimeout, timezone, allow, storage, readOnly);
+		return new ApplicationDataSource(name, className, connStr, username, password, blob, clob, connectionLimit, connectionTimeout, metaCacheTimeout, timezone, allow, storage, readOnly, validate);
 	}
 
 	@Override
@@ -89,7 +89,7 @@ public class ApplicationDataSource extends DataSourceSupport {
 	@Override
 	public DataSource cloneReadOnly() {
 		return new ApplicationDataSource(getName(), getClazz(), connStr, getUsername(), getPassword(),
-				isBlob(), isClob(), getConnectionLimit(), getConnectionTimeout(), getMetaCacheTimeout(), getTimeZone(), allow, isStorage(), isReadOnly());
+				isBlob(), isClob(), getConnectionLimit(), getConnectionTimeout(), getMetaCacheTimeout(), getTimeZone(), allow, isStorage(), isReadOnly(), validate() );
 	}
 
 	@Override
@@ -109,7 +109,7 @@ public class ApplicationDataSource extends DataSourceSupport {
 
 	@Override
 	public boolean validate() {
-		throw exp();
+		return true;
 	}
 
 

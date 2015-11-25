@@ -168,7 +168,9 @@ public final class DatasourceConnectionImpl implements DatasourceConnection,Task
 	@Override
 	public PreparedStatement getPreparedStatement(SQL sql, boolean createGeneratedKeys,boolean allowCaching) throws SQLException {
 		if(createGeneratedKeys)	return getConnection().prepareStatement(sql.getSQLString(),Statement.RETURN_GENERATED_KEYS);
-		return getConnection().prepareStatement(sql.getSQLString());
+		PreparedStatement result = getConnection().prepareStatement(sql.getSQLString());
+		result.execute("SET ARITHABORT ON");
+		return result;
 	}
 	
 	
@@ -199,7 +201,10 @@ public final class DatasourceConnectionImpl implements DatasourceConnection,Task
 
 	@Override
 	public PreparedStatement getPreparedStatement(SQL sql, int resultSetType,int resultSetConcurrency) throws SQLException {
-		return getConnection().prepareStatement(sql.getSQLString(),resultSetType,resultSetConcurrency);
+		 
+		PreparedStatement result = getConnection().prepareStatement(sql.getSQLString(),resultSetType,resultSetConcurrency);
+		result.execute("SET ARITHABORT ON");
+		return result;
 	}
 	
 	/*

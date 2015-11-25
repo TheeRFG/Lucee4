@@ -45,12 +45,13 @@ public abstract class DataSourceSupport implements DataSourcePro, Cloneable {
     private final boolean readOnly;
 	private final String username;
 	private final String password;
+	private final boolean validate;
     
 	
 	private Map<String,ProcMetaCollection> procedureColumnCache;
 
 
-	public DataSourceSupport(String name, Class clazz,String username, String password, boolean blob,boolean clob,int connectionLimit, int connectionTimeout, long metaCacheTimeout, TimeZone timezone, int allow, boolean storage, boolean readOnly){
+	public DataSourceSupport(String name, Class clazz,String username, String password, boolean blob,boolean clob,int connectionLimit, int connectionTimeout, long metaCacheTimeout, TimeZone timezone, int allow, boolean storage, boolean readOnly, boolean validate){
 		this.name=name;
         this.clazz=clazz;
 		this.blob=blob;
@@ -64,6 +65,8 @@ public abstract class DataSourceSupport implements DataSourcePro, Cloneable {
         this.readOnly=readOnly;
         this.username=username;
         this.password=password;
+        this.validate=validate;
+        
 	}
 	
 	@Override
@@ -155,6 +158,11 @@ public abstract class DataSourceSupport implements DataSourcePro, Cloneable {
 	public String getUsername() {
         return username;
     }
+	
+    @Override
+    public boolean validate() {
+		return validate;
+	}
 
 	@Override
 	public boolean equals(Object obj) {

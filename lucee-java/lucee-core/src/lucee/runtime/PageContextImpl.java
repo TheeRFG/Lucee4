@@ -3069,12 +3069,17 @@ public final class PageContextImpl extends PageContext implements Sizeable {
 		
 		String id=DatasourceConnectionPool.createId(ds,user,pass);
 		DatasourceConnection dc=transConns.get(id);
+		dc = getValidatedConnection( dc, ds, user, pass );
+		transConns.put(id, dc);
+		return dc;
+	}
+	
+	private DatasourceConnection getValidatedConnection( DatasourceConnection dc, DataSource ds, String user, String pass ) throws PageException {
 		if(dc!=null && DatasourceConnectionPool.isValid(dc,null)){
 			return dc;
 		}
 		dc=config.getDatasourceConnectionPool().getDatasourceConnection(ds, user, pass);
-		transConns.put(id, dc);
-		return dc;
+		return getValidatedConnection( dc, ds, user, pass );
 	}
 
 	@Override
