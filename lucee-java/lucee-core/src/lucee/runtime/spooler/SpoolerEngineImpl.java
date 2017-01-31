@@ -450,7 +450,7 @@ public class SpoolerEngineImpl implements SpoolerEngine {
 				long sleep = nextExection-System.currentTimeMillis();
 				
 				//print.o("sleep:"+sleep+">"+(sleep/1000));
-				if(sleep>0 && getOpenTaskCount()<=0)doWait(sleep);
+				if(sleep>0)doWait(sleep);
 				
 				//if(sleep<0)break;
 			}
