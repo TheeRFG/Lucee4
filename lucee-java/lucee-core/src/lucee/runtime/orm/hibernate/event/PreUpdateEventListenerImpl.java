@@ -21,8 +21,8 @@ package lucee.runtime.orm.hibernate.event;
 import lucee.runtime.Component;
 import lucee.runtime.orm.hibernate.CommonUtil;
 
-import org.hibernate.event.PreUpdateEvent;
-import org.hibernate.event.PreUpdateEventListener;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEventListener;
 
 public class PreUpdateEventListenerImpl extends EventListener implements PreUpdateEventListener {
 	

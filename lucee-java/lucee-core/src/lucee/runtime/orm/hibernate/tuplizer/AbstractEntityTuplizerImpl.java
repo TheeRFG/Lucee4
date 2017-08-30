@@ -40,8 +40,8 @@ import lucee.runtime.type.util.KeyConstants;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.Getter;
@@ -51,6 +51,8 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.entity.AbstractEntityTuplizer;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.AttributeBinding;
 
 
 public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
@@ -117,7 +119,12 @@ public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
 	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		return new CFCInstantiator(persistentClass);
 	}
-	
+
+	@Override
+	protected Instantiator buildInstantiator(EntityBinding binding) {
+		return new CFCInstantiator(binding);
+	}
+
 	/**
 	 * return accessors 
 	 * @param mappedProperty
@@ -137,17 +144,36 @@ public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
 		return buildPropertyAccessor(mappedProperty).getGetter( null, mappedProperty.getName() );
 	}
 
+	@Override
+	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
+		return accessor.getGetter( null, mappedProperty.getPropertyAccessorName() );
+	}
+
 	
 	@Override
 	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
 	}
-	
+
+	@Override
+	protected Setter buildPropertySetter(AttributeBinding mappedProperty) {
+		return accessor.getSetter(null, mappedProperty.getPropertyAccessorName());
+	}
+
 	@Override
 	protected ProxyFactory buildProxyFactory(PersistentClass pc, Getter arg1,Setter arg2) {
 		CFCHibernateProxyFactory pf = new CFCHibernateProxyFactory();
 		pf.postInstantiate(pc);
 		
+		return pf;
+	}
+
+	@Override
+	protected ProxyFactory buildProxyFactory(EntityBinding eb, Getter arg1,Setter arg2) {
+		//will need to figure out how to get entity name and node name out of the EntityBinding.. took a stab in the dark.
+		CFCHibernateProxyFactory pf = new CFCHibernateProxyFactory();
+		pf.postInstantiate(eb);
+
 		return pf;
 	}
 

@@ -25,7 +25,7 @@ import lucee.runtime.exp.PageException;
 import lucee.runtime.orm.hibernate.CommonUtil;
 import lucee.runtime.orm.hibernate.HibernatePageException;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.AbstractLazyInitializer;
 
 /**

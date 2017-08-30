@@ -21,8 +21,8 @@ package lucee.runtime.orm.hibernate.event;
 import lucee.runtime.Component;
 import lucee.runtime.orm.hibernate.CommonUtil;
 
-import org.hibernate.event.PreDeleteEvent;
-import org.hibernate.event.PreDeleteEventListener;
+import org.hibernate.event.spi.PreDeleteEvent;
+import org.hibernate.event.spi.PreDeleteEventListener;
 
 public class PreDeleteEventListenerImpl extends EventListener implements PreDeleteEventListener {
 

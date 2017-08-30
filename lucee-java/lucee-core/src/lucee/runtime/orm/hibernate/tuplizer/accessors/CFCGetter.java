@@ -37,7 +37,7 @@ import lucee.runtime.type.Collection.Key;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.property.Getter;
 import org.hibernate.type.Type;

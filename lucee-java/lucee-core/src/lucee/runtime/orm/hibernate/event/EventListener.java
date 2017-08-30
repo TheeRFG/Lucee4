@@ -31,7 +31,7 @@ import lucee.runtime.type.Collection.Key;
 import lucee.runtime.type.Struct;
 import lucee.runtime.type.UDF;
 
-import org.hibernate.event.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEvent;
 
 public abstract class EventListener {
 

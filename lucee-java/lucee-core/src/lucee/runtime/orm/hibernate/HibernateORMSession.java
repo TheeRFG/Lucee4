@@ -56,9 +56,9 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.engine.query.HQLQueryPlan;
-import org.hibernate.engine.query.ParameterMetadata;
-import org.hibernate.engine.query.QueryPlanCache;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.query.spi.ParameterMetadata;
+import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.Type;
 
@@ -127,7 +127,9 @@ public class HibernateORMSession implements ORMSession {
 	
 	void createSession(SessionFactory factory, DatasourceConnection dc) { 
 		Session session;
-		_sessions.put(KeyImpl.init(dc.getDatasource().getName()), session=factory.openSession(dc.getConnection()));
+		//_sessions.put(KeyImpl.init(dc.getDatasource().getName()), session=factory.openSession(dc.getConnection())); //wouldn't compile.
+		_sessions.put(KeyImpl.init(dc.getDatasource().getName()), session=factory.openSession()); //possible alternative
+		//_sessions.put(KeyImpl.init(dc.getDatasource().getName()), session=factory.openStatelessSession(dc.getConnection())); //other alternative
 		session.setFlushMode(FlushMode.MANUAL);
 	}
 

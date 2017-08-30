@@ -35,6 +35,7 @@ import lucee.runtime.orm.hibernate.HibernateUtil;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.Instantiator;
+import org.hibernate.metamodel.binding.EntityBinding;
 
 public class CFCInstantiator implements Instantiator {
 	
@@ -57,6 +58,19 @@ public class CFCInstantiator implements Instantiator {
 			while ( itr.hasNext() ) {
 				final PersistentClass subclassInfo = itr.next();
 				isInstanceEntityNames.add( subclassInfo.getEntityName() );
+			}
+		}
+	}
+
+	public CFCInstantiator(EntityBinding mappingInfo) {
+		//this.entityName = mappingInfo.getEntity().getName(); //another way to do the same thing?
+		this.entityName = mappingInfo.getJpaEntityName();
+		isInstanceEntityNames.add( entityName );
+		if ( mappingInfo.hasSubEntityBindings() ) {
+			Iterator<EntityBinding> itr = mappingInfo.getDirectSubEntityBindings().iterator();
+			while ( itr.hasNext() ) {
+				final EntityBinding subclassInfo = itr.next();
+				isInstanceEntityNames.add( subclassInfo.getJpaEntityName() );
 			}
 		}
 	}

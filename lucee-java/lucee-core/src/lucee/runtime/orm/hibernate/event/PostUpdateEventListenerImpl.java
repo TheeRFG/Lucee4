@@ -21,8 +21,9 @@ package lucee.runtime.orm.hibernate.event;
 import lucee.runtime.Component;
 import lucee.runtime.orm.hibernate.CommonUtil;
 
-import org.hibernate.event.PostUpdateEvent;
-import org.hibernate.event.PostUpdateEventListener;
+import org.hibernate.event.spi.PostUpdateEvent;
+import org.hibernate.event.spi.PostUpdateEventListener;
+import org.hibernate.persister.entity.EntityPersister;
 
 public class PostUpdateEventListenerImpl extends EventListener implements PostUpdateEventListener {
 
@@ -35,5 +36,9 @@ public class PostUpdateEventListenerImpl extends EventListener implements PostUp
 	public void onPostUpdate(PostUpdateEvent event) {
     	invoke(CommonUtil.POST_UPDATE, event.getEntity());
     }
+
+	public boolean requiresPostCommitHanding(EntityPersister persister) {
+		return false;
+	}
 
 }

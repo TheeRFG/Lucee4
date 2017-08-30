@@ -21,8 +21,9 @@ package lucee.runtime.orm.hibernate.event;
 import lucee.runtime.Component;
 import lucee.runtime.orm.hibernate.CommonUtil;
 
-import org.hibernate.event.PostDeleteEvent;
-import org.hibernate.event.PostDeleteEventListener;
+import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
+import org.hibernate.persister.entity.EntityPersister;
 
 public class PostDeleteEventListenerImpl extends EventListener implements PostDeleteEventListener {
 
@@ -35,5 +36,9 @@ public class PostDeleteEventListenerImpl extends EventListener implements PostDe
 	public void onPostDelete(PostDeleteEvent event) {
     	invoke(CommonUtil.POST_DELETE, event.getEntity());
     }
+
+	public boolean requiresPostCommitHanding(EntityPersister persister) {
+		return false;
+	}
 
 }

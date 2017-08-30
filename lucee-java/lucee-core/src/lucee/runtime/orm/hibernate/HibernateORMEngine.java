@@ -62,13 +62,12 @@ import lucee.runtime.type.util.ListUtil;
 import org.hibernate.EntityMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.event.EventListeners;
-import org.hibernate.event.PostDeleteEventListener;
-import org.hibernate.event.PostInsertEventListener;
-import org.hibernate.event.PostLoadEventListener;
-import org.hibernate.event.PostUpdateEventListener;
-import org.hibernate.event.PreDeleteEventListener;
-import org.hibernate.event.PreLoadEventListener;
+import org.hibernate.event.spi.PostDeleteEventListener;
+import org.hibernate.event.spi.PostInsertEventListener;
+import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.event.spi.PostUpdateEventListener;
+import org.hibernate.event.spi.PreDeleteEventListener;
+import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -239,6 +238,7 @@ public class HibernateORMEngine implements ORMEngine {
 		}
 		Configuration conf = data.getConfiguration(key);
 		conf.setInterceptor(new InterceptorImpl(listener));
+		/*
         EventListeners listeners = conf.getEventListeners();
         Map<String, CFCInfo> cfcs = data.getCFCs(key);
         // post delete
@@ -273,6 +273,7 @@ public class HibernateORMEngine implements ORMEngine {
 		// pre update
 		//list=merge(listener,cfcs,CommonUtil.PRE_UPDATE);
 		//listeners.setPreUpdateEventListeners(list.toArray(new PreUpdateEventListener[list.size()]));
+		*/
 	}
 
 	private static List<EventListener> merge(EventListener listener, Map<String, CFCInfo> cfcs, Collection.Key eventType) {
@@ -524,10 +525,10 @@ class CFCInfo {
 	public long getModified() {
 		return modified;
 	}
-	
+
 	public DataSource getDataSource() {
 		return ds;
 	}
-	
+
 }
 

@@ -21,8 +21,9 @@ package lucee.runtime.orm.hibernate.event;
 import lucee.runtime.Component;
 import lucee.runtime.orm.hibernate.CommonUtil;
 
-import org.hibernate.event.PostInsertEvent;
-import org.hibernate.event.PostInsertEventListener;
+import org.hibernate.event.spi.PostInsertEvent;
+import org.hibernate.event.spi.PostInsertEventListener;
+import org.hibernate.persister.entity.EntityPersister;
 
 public class PostInsertEventListenerImpl extends EventListener implements PostInsertEventListener {
 
@@ -36,4 +37,7 @@ public class PostInsertEventListenerImpl extends EventListener implements PostIn
 		invoke(CommonUtil.POST_INSERT, event.getEntity());
     }
 
+	public boolean requiresPostCommitHanding(EntityPersister persister) {
+		return false;
+	}
 }
