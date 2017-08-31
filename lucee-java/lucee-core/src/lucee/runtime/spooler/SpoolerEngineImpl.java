@@ -445,12 +445,12 @@ public class SpoolerEngineImpl implements SpoolerEngine {
 				
 				nextExection=joinTasks(runningTasks,0,nextExection);
 				if(adds!=engine.adds()) continue;
-				
-				if(nextExection==Long.MAX_VALUE)break;
+
+				if(nextExection==Long.MAX_VALUE) break;
 				long sleep = nextExection-System.currentTimeMillis();
 				
 				//print.o("sleep:"+sleep+">"+(sleep/1000));
-				if(sleep>0)doWait(sleep);
+				if(sleep>0) doWait(sleep);
 				
 				//if(sleep<0)break;
 			}

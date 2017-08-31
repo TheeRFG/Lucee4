@@ -642,7 +642,7 @@ public abstract class ComponentPage extends PagePlus  {
 		        		// CFML
 			        	if(UDF.RETURN_FORMAT_SERIALIZE==format)	{
 			        		 // do not catch exception when format is defined
-			        		args=new CFMLExpressionInterpreter().interpret(pc, str);
+			        		args=new CFMLExpressionInterpreter(false).interpret(pc, str);
 			        	}
 			        	// JSON
 			        	if(UDF.RETURN_FORMAT_JSON==format)	{
@@ -657,7 +657,7 @@ public abstract class ComponentPage extends PagePlus  {
 			        		} 
 			        		catch (PageException pe) {
 			        			try {
-				        			args=new CFMLExpressionInterpreter().interpret(pc, str);
+				        			args=new CFMLExpressionInterpreter(false).interpret(pc, str);
 				        		} 
 				        		catch (PageException _pe) {}
 							}
@@ -986,7 +986,7 @@ public abstract class ComponentPage extends PagePlus  {
     	}
     	// create a wsdl file
     	else {
-	    	RPCServer.getInstance(pc.getId(),pc.getServletContext())
+        	RPCServer.getInstance(pc,component)
 	        	.doGet(pc.getHttpServletRequest(), pc. getHttpServletResponse(), component);
     	}
     }
@@ -994,7 +994,7 @@ public abstract class ComponentPage extends PagePlus  {
     private void callWebservice(PageContext pc, Component component) throws IOException, ServletException {
     	ComponentController.set(pc, component);
     	try {
-        	RPCServer.getInstance(pc.getId(),pc.getServletContext())
+        	RPCServer.getInstance(pc,component)
         		.doPost(pc.getHttpServletRequest(), pc. getHttpServletResponse(), component);
     	}
     	finally {
