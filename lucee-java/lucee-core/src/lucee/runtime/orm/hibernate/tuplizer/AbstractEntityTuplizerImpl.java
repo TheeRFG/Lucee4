@@ -41,30 +41,26 @@ import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.entity.AbstractEntityTuplizer;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.AttributeBinding;
 
 
 public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
 
-	private static CFCAccessor accessor=new CFCAccessor();
-	
+
 	public AbstractEntityTuplizerImpl(EntityMetamodel entityMetamodel, PersistentClass persistentClass) {
 		super(entityMetamodel, persistentClass);
 	}
 
 	@Override
-	public Serializable getIdentifier(Object entity, SessionImplementor arg1) {
+	public Serializable getIdentifier(Object entity, SharedSessionContractImplementor arg1) {
 		return toIdentifier(super.getIdentifier(entity, arg1));
 	}
 	
@@ -114,15 +110,14 @@ public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
 		return id;
 	}
 
-
-	@Override
 	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		return new CFCInstantiator(persistentClass);
 	}
 
+
 	@Override
-	protected Instantiator buildInstantiator(EntityBinding binding) {
-		return new CFCInstantiator(binding);
+	protected Instantiator buildInstantiator(EntityMetamodel entityMetamodel, PersistentClass persistentClass) {
+		return new CFCInstantiator(persistentClass); //ignoring EntityMetamodel for now?
 	}
 
 	/**
@@ -130,34 +125,28 @@ public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
 	 * @param mappedProperty
 	 * @return
 	 */
-	private PropertyAccessor buildPropertyAccessor(Property mappedProperty) {
+	/*
+	private PropertyAccess buildPropertyAccess(Property mappedProperty) {
 		if ( mappedProperty.isBackRef() ) {
-			PropertyAccessor ac = mappedProperty.getPropertyAccessor(null);
+			PropertyAccessor ac = mappedProperty.getPropertyAccessor(null); //need to return a PropertyAccess
 			if(ac!=null) return ac;
 		}
 		return accessor;
 	}
+	*/
 
 	
 	@Override
 	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return buildPropertyAccessor(mappedProperty).getGetter( null, mappedProperty.getName() );
+				//not sure I did this right. may need to first get propertyaccessstrategy and buildstrategy from there.
+		return mappedProperty.getGetter(mappedEntity.getMappedClass());
+		//return buildPropertyAccess(mappedProperty).getGetter( null, mappedProperty.getName() );
 	}
 
-	@Override
-	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
-		return accessor.getGetter( null, mappedProperty.getPropertyAccessorName() );
-	}
-
-	
 	@Override
 	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
-	}
-
-	@Override
-	protected Setter buildPropertySetter(AttributeBinding mappedProperty) {
-		return accessor.getSetter(null, mappedProperty.getPropertyAccessorName());
+		return mappedProperty.getSetter(mappedEntity.getMappedClass());
+		//return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
 	}
 
 	@Override
@@ -165,15 +154,6 @@ public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
 		CFCHibernateProxyFactory pf = new CFCHibernateProxyFactory();
 		pf.postInstantiate(pc);
 		
-		return pf;
-	}
-
-	@Override
-	protected ProxyFactory buildProxyFactory(EntityBinding eb, Getter arg1,Setter arg2) {
-		//will need to figure out how to get entity name and node name out of the EntityBinding.. took a stab in the dark.
-		CFCHibernateProxyFactory pf = new CFCHibernateProxyFactory();
-		pf.postInstantiate(eb);
-
 		return pf;
 	}
 
@@ -201,7 +181,6 @@ public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
 		return EntityMode.MAP;
 	}
 
-	@Override
 	public boolean isInstrumented() {
 		return false;
 	}

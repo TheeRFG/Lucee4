@@ -29,7 +29,7 @@ import lucee.runtime.type.Collection.Key;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Setter;
 
 public final class CFCSetter implements Setter {
 	

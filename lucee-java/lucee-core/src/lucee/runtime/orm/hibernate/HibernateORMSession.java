@@ -57,7 +57,7 @@ import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.ParameterMetadata;
+import org.hibernate.query.ParameterMetadata;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.Type;
@@ -294,8 +294,8 @@ public class HibernateORMSession implements ORMSession {
 		Key dsn = KeyImpl.init(ORMUtil.getDataSource(pc,datasource).getName());
 		SessionFactory factory = getSession(dsn).getSessionFactory();
 		
-		if(Util.isEmpty(cacheName))factory.evictQueries();
-		else factory.evictQueries(cacheName);
+		if(Util.isEmpty(cacheName))factory.getCache().evictQueryRegions();
+		else factory.getCache().evictQueryRegion(cacheName);
 		
 		/*Iterator<Session> it = _sessions.values().iterator();
 		while(it.hasNext()){
@@ -315,8 +315,8 @@ public class HibernateORMSession implements ORMSession {
 		Iterator<Session> it = _sessions.values().iterator();
 		while(it.hasNext()){
 			SessionFactory f = it.next().getSessionFactory();
-			if(id==null) f.evictEntity(entityName);
-			else f.evictEntity(entityName,CommonUtil.toSerializable(id));
+			if(id==null) f.getCache().evictEntityRegion(entityName);
+			else f.getCache().evictEntity(entityName, CommonUtil.toSerializable(id));
 		}
 	}
 	
@@ -332,8 +332,8 @@ public class HibernateORMSession implements ORMSession {
 		Iterator<Session> it = _sessions.values().iterator();
 		while(it.hasNext()){
 			SessionFactory f = it.next().getSessionFactory();
-			if(id==null) f.evictCollection(role);
-			else f.evictCollection(role,CommonUtil.toSerializable(id));
+			if(id==null) f.getCache().evictCollectionRegion(role);
+			else f.getCache().evictCollection(role,CommonUtil.toSerializable(id));
 		}
 	}
 
@@ -436,7 +436,7 @@ public class HibernateORMSession implements ORMSession {
 					if(meta!=null){
 						name=(String) names.get(keys[i],null);
 						if(name==null) continue; // param not needed will be ignored
-						type = meta.getNamedParameterExpectedType(name);
+						type = meta.getQueryParameter(name).getType();
 						obj=HibernateCaster.toSQL(type, obj,isArray);
 						if(isArray.toBooleanValue()) {
 							if(obj instanceof Object[])
@@ -472,7 +472,8 @@ public class HibernateORMSession implements ORMSession {
 						//query.setParameter(index, item.getValue(),type);
 					}
 					if(meta!=null){
-						type = meta.getOrdinalParameterExpectedType(index+1);
+						//type = meta.getOrdinalParameterExpectedType(index+1);
+						type = meta.getQueryParameter(index+1).getType(); //should this be zero based? is the `position` in the array, or position of param i.e. ?1
 						obj=HibernateCaster.toSQL(type, obj,isArray);
 						// TOOD can the following be done somehow
 						//if(isArray.toBooleanValue())
@@ -484,8 +485,9 @@ public class HibernateORMSession implements ORMSession {
 						query.setParameter(index, obj);
 					index++;
 				}
-				if(meta.getOrdinalParameterCount()>index)
-					throw ExceptionUtil.createException(this,null,"parameter array is to small ["+arr.size()+"], need ["+meta.getOrdinalParameterCount()+"] elements",null);
+				int ordinalParameterCount = meta.getNamedParameterNames().size();
+				if(ordinalParameterCount>index + 1)
+					throw ExceptionUtil.createException(this,null,"parameter array is to small ["+arr.size()+"], need ["+ordinalParameterCount+"] elements",null);
 			}
 		}
 		

@@ -23,12 +23,11 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
-import org.hibernate.metamodel.binding.EntityBinding;
 
 
 public class CFCHibernateProxyFactory implements ProxyFactory {
@@ -48,17 +47,11 @@ public class CFCHibernateProxyFactory implements ProxyFactory {
 	}
 
 	public void postInstantiate(PersistentClass pc) {
-		this.nodeName =pc.getNodeName();
+		this.nodeName =pc.getClassName(); //do we just need similar logic in the other postInstatiate()? not sure what nodeName was (package name?). TRYING getClassName() instead.
 		this.entityName =pc.getEntityName();
 	}
 
-	public void postInstantiate(EntityBinding eb) {
-		// ???
-		this.nodeName = eb.getJpaEntityName();
-		this.entityName = eb.getJpaEntityName();
-	}
-
-	public HibernateProxy getProxy(final Serializable id,  final SessionImplementor session) {
+	public HibernateProxy getProxy(final Serializable id,  final SharedSessionContractImplementor session) {
 		try {
 			return new CFCHibernateProxy(new CFCLazyInitializer(entityName, id, session));
 		}

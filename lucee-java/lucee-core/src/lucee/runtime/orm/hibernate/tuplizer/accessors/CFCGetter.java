@@ -37,9 +37,9 @@ import lucee.runtime.type.Collection.Key;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.property.Getter;
+import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.Type;
 
 public class CFCGetter implements Getter {
@@ -63,7 +63,6 @@ public class CFCGetter implements Getter {
 		this.key=key;
 	}
 	
-	@Override
 	public Object get(Object trg) throws HibernateException {
 		try {
 			// MUST cache this, perhaps when building xml
@@ -96,12 +95,10 @@ public class CFCGetter implements Getter {
 	}
 	
 
-	@Override
-	public Object getForInsert(Object trg, Map arg1, SessionImplementor arg2)throws HibernateException {
+	public Object getForInsert(Object trg, Map arg1, SharedSessionContractImplementor arg2)throws HibernateException {
 		return get(trg);// MUST better solution? this is from MapGetter
 	}
 
-	@Override
 	public Member getMember() {
 		return null;
 	}

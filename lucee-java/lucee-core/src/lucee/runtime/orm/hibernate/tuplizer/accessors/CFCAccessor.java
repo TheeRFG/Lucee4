@@ -19,11 +19,11 @@
 package lucee.runtime.orm.hibernate.tuplizer.accessors;
 
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.property.Getter;
-import org.hibernate.property.PropertyAccessor;
-import org.hibernate.property.Setter;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 
-public class CFCAccessor implements PropertyAccessor {
+//pretty sure we can delete this class since it's not used anywhere anymore.
+public class CFCAccessor {
 	
 	public CFCAccessor(){
 	}

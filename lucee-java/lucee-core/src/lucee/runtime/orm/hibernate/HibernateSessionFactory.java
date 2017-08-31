@@ -216,18 +216,22 @@ public class HibernateSessionFactory {
 			return;
 		}
 		else if(ORMConfiguration.DBCREATE_DROP_CREATE==ormConf.getDbCreate()) {
-			SchemaExport export = new SchemaExport(configuration);
+			//SchemaExport export = new SchemaExport(configuration);
+			SchemaExport export = new SchemaExport();
 			export.setHaltOnError(true);
 	            
-			export.execute(false,true,false,false);
+			//export.execute(false,true,false,false);
             printError(log,data,export.getExceptions(),false);
             executeSQLScript(ormConf,dc);
 		}
 		else if(ORMConfiguration.DBCREATE_UPDATE==ormConf.getDbCreate()) {
-			SchemaUpdate update = new SchemaUpdate(configuration);
+//			SchemaUpdate update = new SchemaUpdate(configuration);
+			//need to figure out how to set the execute target based off configuration. EMS uses this, so will have to be figured out.
+				//could maybe use schemaupdatehelper, schemaupdatetask
+			SchemaUpdate update = new SchemaUpdate();
             update.setHaltOnError(true);
-            update.execute(false, true);
-            printError(log,data,update.getExceptions(),false);
+            //update.execute(false, true);
+            //printError(log,data,update.getExceptions(),false);
         }
 	}
 
