@@ -71,6 +71,9 @@ import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.SessionFactoryImpl;
 
 public class HibernateORMEngine implements ORMEngine {
 	
@@ -238,48 +241,66 @@ public class HibernateORMEngine implements ORMEngine {
 		}
 		Configuration conf = data.getConfiguration(key);
 		conf.setInterceptor(new InterceptorImpl(listener));
-		/*
-        EventListeners listeners = conf.getEventListeners();
+
+
+		EventListenerRegistry registry = ((SessionFactoryImpl) data.getFactory(key)).getServiceRegistry().getService(
+				EventListenerRegistry.class);
+		//registry.getEventListenerGroup(EventType.POST_COMMIT_INSERT).appendListener(listener);
+		//registry.getEventListenerGroup(EventType.POST_COMMIT_UPDATE).appendListener(listener);
+
+        //EventListeners listeners = conf.getEventListeners();
         Map<String, CFCInfo> cfcs = data.getCFCs(key);
         // post delete
-		List<EventListener> 
-		list=merge(listener,cfcs,CommonUtil.POST_DELETE);
-		listeners.setPostDeleteEventListeners(list.toArray(new PostDeleteEventListener[list.size()]));
-		
+		List<PostDeleteEventListener>
+		postDeleteList=mergePostDelete(listener,cfcs,CommonUtil.POST_DELETE);
+		//listeners.setPostDeleteEventListeners(list.toArray(new PostDeleteEventListener[list.size()]));
+		//registry.appendListeners(EventType.POST_DELETE, postDeleteList);
+		//postDeleteList.forEach(item -> registry.appendListeners(EventType.POST_DELETE, item));
+		registry.appendListeners(EventType.POST_DELETE, postDeleteList.toArray(new PostDeleteEventListener[postDeleteList.size()]));
+
+
         // post insert
-		list=merge(listener,cfcs,CommonUtil.POST_INSERT);
-		listeners.setPostInsertEventListeners(list.toArray(new PostInsertEventListener[list.size()]));
-		
+		List<PostInsertEventListener>
+		postInsertList=mergePostInsert(listener,cfcs,CommonUtil.POST_INSERT);
+		//listeners.setPostInsertEventListeners(list.toArray(new PostInsertEventListener[list.size()]));
+		postInsertList.forEach(item -> registry.appendListeners(EventType.POST_INSERT, item));
+
 		// post update
-		list=merge(listener,cfcs,CommonUtil.POST_UPDATE);
-		listeners.setPostUpdateEventListeners(list.toArray(new PostUpdateEventListener[list.size()]));
-		
+		List<PostUpdateEventListener>
+		postUpdateList=mergePostUpdate(listener,cfcs,CommonUtil.POST_UPDATE);
+		//listeners.setPostUpdateEventListeners(list.toArray(new PostUpdateEventListener[list.size()]));
+		postUpdateList.forEach(item -> registry.appendListeners(EventType.POST_UPDATE, item));
+
 		// post load
-		list=merge(listener,cfcs,CommonUtil.POST_LOAD);
-		listeners.setPostLoadEventListeners(list.toArray(new PostLoadEventListener[list.size()]));
-		
+		List<PostLoadEventListener>
+		postLoadList=mergePostLoad(listener,cfcs,CommonUtil.POST_LOAD);
+		//listeners.setPostLoadEventListeners(list.toArray(new PostLoadEventListener[list.size()]));
+		postLoadList.forEach(item -> registry.appendListeners(EventType.POST_LOAD, item));
+
 		// pre delete
-		list=merge(listener,cfcs,CommonUtil.PRE_DELETE);
-		listeners.setPreDeleteEventListeners(list.toArray(new PreDeleteEventListener[list.size()]));
-		
+		List<PreDeleteEventListener>
+		preDeleteList=mergePreDelete(listener,cfcs,CommonUtil.PRE_DELETE);
+		//listeners.setPreDeleteEventListeners(list.toArray(new PreDeleteEventListener[list.size()]));
+		preDeleteList.forEach(item -> registry.appendListeners(EventType.PRE_DELETE, item));
+
 		// pre insert
 		//list=merge(listener,cfcs,CommonUtil.PRE_INSERT);
 		//listeners.setPreInsertEventListeners(list.toArray(new PreInsertEventListener[list.size()]));
-		
+
 		// pre load
-		list=merge(listener,cfcs,CommonUtil.PRE_LOAD);
-		listeners.setPreLoadEventListeners(list.toArray(new PreLoadEventListener[list.size()]));
-		
+		List<PreLoadEventListener>
+		preLoadList=mergePreLoad(listener,cfcs,CommonUtil.PRE_LOAD);
+		//listeners.setPreLoadEventListeners(list.toArray(new PreLoadEventListener[list.size()]));
+		preLoadList.forEach(item -> registry.appendListeners(EventType.PRE_LOAD, item));
+
 		// pre update
 		//list=merge(listener,cfcs,CommonUtil.PRE_UPDATE);
 		//listeners.setPreUpdateEventListeners(list.toArray(new PreUpdateEventListener[list.size()]));
-		*/
 	}
+	private static List<PostDeleteEventListener> mergePostDelete(EventListener listener, Map<String, CFCInfo> cfcs, Collection.Key eventType) {
+		List<PostDeleteEventListener> list=new ArrayList<PostDeleteEventListener>();
 
-	private static List<EventListener> merge(EventListener listener, Map<String, CFCInfo> cfcs, Collection.Key eventType) {
-		List<EventListener> list=new ArrayList<EventListener>();
-			
-		
+
 		Iterator<Entry<String, CFCInfo>> it = cfcs.entrySet().iterator();
 		Entry<String, CFCInfo> entry;
 		Component cfc;
@@ -289,30 +310,133 @@ public class HibernateORMEngine implements ORMEngine {
 			if(EventListener.hasEventType(cfc,eventType)) {
 				if(CommonUtil.POST_DELETE.equals(eventType))
 					list.add(new PostDeleteEventListenerImpl(cfc));
-				if(CommonUtil.POST_INSERT.equals(eventType))
-					list.add(new PostInsertEventListenerImpl(cfc));
-				if(CommonUtil.POST_LOAD.equals(eventType))
-					list.add(new PostLoadEventListenerImpl(cfc));
-				if(CommonUtil.POST_UPDATE.equals(eventType))
-					list.add(new PostUpdateEventListenerImpl(cfc));
-				
-				if(CommonUtil.PRE_DELETE.equals(eventType))
-					list.add(new PreDeleteEventListenerImpl(cfc));
-				if(CommonUtil.PRE_INSERT.equals(eventType))
-					list.add(new PreInsertEventListenerImpl(cfc));
-				if(CommonUtil.PRE_LOAD.equals(eventType))
-					list.add(new PreLoadEventListenerImpl(cfc));
-				if(CommonUtil.PRE_UPDATE.equals(eventType))
-					list.add(new PreUpdateEventListenerImpl(cfc));
 			}
 		}
-		
+
 		// general listener
+		/*
 		if(listener!=null && EventListener.hasEventType(listener.getCFC(),eventType))
 			list.add(listener);
-		
+		*/
+
 		return list;
 	}
+
+	private static List<PostInsertEventListener> mergePostInsert(EventListener listener, Map<String, CFCInfo> cfcs, Collection.Key eventType) {
+		List<PostInsertEventListener> list=new ArrayList<PostInsertEventListener>();
+
+
+		Iterator<Entry<String, CFCInfo>> it = cfcs.entrySet().iterator();
+		Entry<String, CFCInfo> entry;
+		Component cfc;
+		while(it.hasNext()){
+			entry = it.next();
+			cfc = entry.getValue().getCFC();
+			if(EventListener.hasEventType(cfc,eventType)) {
+				if(CommonUtil.POST_INSERT.equals(eventType))
+					list.add(new PostInsertEventListenerImpl(cfc));
+			}
+		}
+
+		// general listener
+//		if(listener!=null && EventListener.hasEventType(listener.getCFC(),eventType))
+//			list.add(listener);
+
+		return list;
+	}
+
+	private static List<PostLoadEventListener> mergePostLoad(EventListener listener, Map<String, CFCInfo> cfcs, Collection.Key eventType) {
+		List<PostLoadEventListener> list=new ArrayList<PostLoadEventListener>();
+
+
+		Iterator<Entry<String, CFCInfo>> it = cfcs.entrySet().iterator();
+		Entry<String, CFCInfo> entry;
+		Component cfc;
+		while(it.hasNext()){
+			entry = it.next();
+			cfc = entry.getValue().getCFC();
+			if(EventListener.hasEventType(cfc,eventType)) {
+				if(CommonUtil.POST_LOAD.equals(eventType))
+					list.add(new PostLoadEventListenerImpl(cfc));
+			}
+		}
+
+		// general listener
+//		if(listener!=null && EventListener.hasEventType(listener.getCFC(),eventType))
+//			list.add(listener);
+
+		return list;
+	}
+
+	private static List<PostUpdateEventListener> mergePostUpdate(EventListener listener, Map<String, CFCInfo> cfcs, Collection.Key eventType) {
+		List<PostUpdateEventListener> list=new ArrayList<PostUpdateEventListener>();
+
+
+		Iterator<Entry<String, CFCInfo>> it = cfcs.entrySet().iterator();
+		Entry<String, CFCInfo> entry;
+		Component cfc;
+		while(it.hasNext()){
+			entry = it.next();
+			cfc = entry.getValue().getCFC();
+			if(EventListener.hasEventType(cfc,eventType)) {
+				if(CommonUtil.POST_UPDATE.equals(eventType))
+					list.add(new PostUpdateEventListenerImpl(cfc));
+			}
+		}
+
+		// general listener
+//		if(listener!=null && EventListener.hasEventType(listener.getCFC(),eventType))
+//			list.add(listener);
+
+		return list;
+	}
+
+	private static List<PreDeleteEventListener> mergePreDelete(EventListener listener, Map<String, CFCInfo> cfcs, Collection.Key eventType) {
+		List<PreDeleteEventListener> list=new ArrayList<PreDeleteEventListener>();
+
+
+		Iterator<Entry<String, CFCInfo>> it = cfcs.entrySet().iterator();
+		Entry<String, CFCInfo> entry;
+		Component cfc;
+		while(it.hasNext()){
+			entry = it.next();
+			cfc = entry.getValue().getCFC();
+			if(EventListener.hasEventType(cfc,eventType)) {
+				if(CommonUtil.PRE_DELETE.equals(eventType))
+					list.add(new PreDeleteEventListenerImpl(cfc));
+			}
+		}
+
+		// general listener
+//		if(listener!=null && EventListener.hasEventType(listener.getCFC(),eventType))
+//			list.add(listener);
+
+		return list;
+	}
+
+	private static List<PreLoadEventListener> mergePreLoad(EventListener listener, Map<String, CFCInfo> cfcs, Collection.Key eventType) {
+		List<PreLoadEventListener> list=new ArrayList<PreLoadEventListener>();
+
+
+		Iterator<Entry<String, CFCInfo>> it = cfcs.entrySet().iterator();
+		Entry<String, CFCInfo> entry;
+		Component cfc;
+		while(it.hasNext()){
+			entry = it.next();
+			cfc = entry.getValue().getCFC();
+			if(EventListener.hasEventType(cfc,eventType)) {
+				if(CommonUtil.PRE_LOAD.equals(eventType))
+					list.add(new PreLoadEventListenerImpl(cfc));
+			}
+		}
+
+		// general listener
+//		if(listener!=null && EventListener.hasEventType(listener.getCFC(),eventType))
+//			list.add(listener);
+
+		return list;
+	}
+
 
 	private static Object hash(PageContext pc) {
 		ApplicationContextPro appContext=(ApplicationContextPro) pc.getApplicationContext();

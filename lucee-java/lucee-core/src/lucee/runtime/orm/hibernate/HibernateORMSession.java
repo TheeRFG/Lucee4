@@ -485,8 +485,9 @@ public class HibernateORMSession implements ORMSession {
 						query.setParameter(index, obj);
 					index++;
 				}
-				int ordinalParameterCount = meta.getNamedParameterNames().size();
-				if(ordinalParameterCount>index + 1)
+				//int ordinalParameterCount = meta.getNamedParameterNames().size();
+				int ordinalParameterCount = meta.getPositionalParameterCount();
+				if(ordinalParameterCount>index)
 					throw ExceptionUtil.createException(this,null,"parameter array is to small ["+arr.size()+"], need ["+ordinalParameterCount+"] elements",null);
 			}
 		}
