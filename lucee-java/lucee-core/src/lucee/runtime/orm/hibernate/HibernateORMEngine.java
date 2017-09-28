@@ -62,6 +62,8 @@ import lucee.runtime.type.util.ListUtil;
 import org.hibernate.EntityMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.event.service.internal.EventListenerGroupImpl;
+import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostLoadEventListener;
@@ -243,8 +245,23 @@ public class HibernateORMEngine implements ORMEngine {
 		conf.setInterceptor(new InterceptorImpl(listener));
 
 
-		EventListenerRegistry registry = ((SessionFactoryImpl) data.getFactory(key)).getServiceRegistry().getService(
-				EventListenerRegistry.class);
+//        EventListenerRegistry registry;
+//        try {
+//		registry = ((SessionFactoryImpl) data.getFactory(key)).getServiceRegistry().getService(
+//				EventListenerRegistry.class);
+//        } catch (Exception e) {
+//            //nada
+//        }
+        //the reason this errors is because getFactory is building session factory but not returning it. it gets called later in init()
+        try {
+            Map<Key, SessionFactory> factories = data.getFactories();
+            System.out.println(factories);
+        } catch(Exception e) {
+
+        }
+        EventListenerRegistry registry = ((SessionFactoryImpl) data.getFactory(key)).getServiceRegistry().getService(
+                EventListenerRegistry.class);
+
 		//registry.getEventListenerGroup(EventType.POST_COMMIT_INSERT).appendListener(listener);
 		//registry.getEventListenerGroup(EventType.POST_COMMIT_UPDATE).appendListener(listener);
 
@@ -256,6 +273,8 @@ public class HibernateORMEngine implements ORMEngine {
 		//listeners.setPostDeleteEventListeners(list.toArray(new PostDeleteEventListener[list.size()]));
 		//registry.appendListeners(EventType.POST_DELETE, postDeleteList);
 		//postDeleteList.forEach(item -> registry.appendListeners(EventType.POST_DELETE, item));
+    	EventListenerGroup postDeleteListenerGroup = registry.getEventListenerGroup(EventType.POST_DELETE);
+		postDeleteListenerGroup.clear();
 		registry.appendListeners(EventType.POST_DELETE, postDeleteList.toArray(new PostDeleteEventListener[postDeleteList.size()]));
 
 
@@ -263,24 +282,32 @@ public class HibernateORMEngine implements ORMEngine {
 		List<PostInsertEventListener>
 		postInsertList=mergePostInsert(listener,cfcs,CommonUtil.POST_INSERT);
 		//listeners.setPostInsertEventListeners(list.toArray(new PostInsertEventListener[list.size()]));
-		postInsertList.forEach(item -> registry.appendListeners(EventType.POST_INSERT, item));
+        EventListenerGroup postInsertListenerGroup = registry.getEventListenerGroup(EventType.POST_INSERT);
+        postInsertListenerGroup.clear();
+        registry.appendListeners(EventType.POST_INSERT, postInsertList.toArray(new PostInsertEventListener[postInsertList.size()]));
 
 		// post update
 		List<PostUpdateEventListener>
 		postUpdateList=mergePostUpdate(listener,cfcs,CommonUtil.POST_UPDATE);
 		//listeners.setPostUpdateEventListeners(list.toArray(new PostUpdateEventListener[list.size()]));
+        EventListenerGroup postUpdateListenerGroup = registry.getEventListenerGroup(EventType.POST_UPDATE);
+        postUpdateListenerGroup.clear();
 		postUpdateList.forEach(item -> registry.appendListeners(EventType.POST_UPDATE, item));
 
 		// post load
 		List<PostLoadEventListener>
 		postLoadList=mergePostLoad(listener,cfcs,CommonUtil.POST_LOAD);
 		//listeners.setPostLoadEventListeners(list.toArray(new PostLoadEventListener[list.size()]));
+        EventListenerGroup postLoadListenerGroup = registry.getEventListenerGroup(EventType.POST_LOAD);
+        postLoadListenerGroup.clear();
 		postLoadList.forEach(item -> registry.appendListeners(EventType.POST_LOAD, item));
 
 		// pre delete
 		List<PreDeleteEventListener>
 		preDeleteList=mergePreDelete(listener,cfcs,CommonUtil.PRE_DELETE);
 		//listeners.setPreDeleteEventListeners(list.toArray(new PreDeleteEventListener[list.size()]));
+        EventListenerGroup preDeleteListenerGroup = registry.getEventListenerGroup(EventType.PRE_DELETE);
+        preDeleteListenerGroup.clear();
 		preDeleteList.forEach(item -> registry.appendListeners(EventType.PRE_DELETE, item));
 
 		// pre insert
@@ -291,6 +318,8 @@ public class HibernateORMEngine implements ORMEngine {
 		List<PreLoadEventListener>
 		preLoadList=mergePreLoad(listener,cfcs,CommonUtil.PRE_LOAD);
 		//listeners.setPreLoadEventListeners(list.toArray(new PreLoadEventListener[list.size()]));
+        EventListenerGroup preLoadListenerGroup = registry.getEventListenerGroup(EventType.PRE_LOAD);
+        preLoadListenerGroup.clear();
 		preLoadList.forEach(item -> registry.appendListeners(EventType.PRE_LOAD, item));
 
 		// pre update

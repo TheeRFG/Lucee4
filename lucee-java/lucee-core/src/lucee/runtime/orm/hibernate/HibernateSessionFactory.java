@@ -23,14 +23,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import lucee.commons.io.log.Log;
 import lucee.commons.io.log.LogUtil;
@@ -62,6 +56,7 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
+import org.hibernate.tool.hbm2ddl.SchemaUpdateTask;
 import org.w3c.dom.Document;
 
 
@@ -185,7 +180,7 @@ public class HibernateSessionFactory {
 			configuration.setProperty("hibernate.default_schema",ormConf.getSchema());
 		
 		
-		if(ormConf.secondaryCacheEnabled()){
+		if(ormConf.secondaryCacheEnabled() && false){
 			if(cacheConfig!=null && cacheConfig.isFile())
 				configuration.setProperty("hibernate.cache.provider_configuration_file_resource_path",cacheConfig.getAbsolutePath());
 			if(regionFactory!=null || Reflector.isInstaneOf(cacheProvider, RegionFactory.class))
@@ -203,7 +198,6 @@ public class HibernateSessionFactory {
 	    <!ATTLIST tuplizer entity-mode (pojo|dom4j|dynamic-map) #IMPLIED>   <!-- entity mode for which tuplizer is in effect --> 
 	    <!ATTLIST tuplizer class CDATA #REQUIRED>                           <!-- the tuplizer class to use --> 
 		*/
-        
 		schemaExport(log,configuration,dc,data);
 		
 		return configuration;

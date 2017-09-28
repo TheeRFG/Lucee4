@@ -33,6 +33,8 @@ import lucee.runtime.orm.hibernate.HBMCreator;
 import lucee.runtime.orm.hibernate.HibernateCaster;
 import lucee.runtime.orm.hibernate.HibernateUtil;
 import lucee.runtime.orm.hibernate.tuplizer.accessors.CFCAccessor;
+import lucee.runtime.orm.hibernate.tuplizer.accessors.CFCGetter;
+import lucee.runtime.orm.hibernate.tuplizer.accessors.CFCSetter;
 import lucee.runtime.orm.hibernate.tuplizer.proxy.CFCHibernateProxyFactory;
 import lucee.runtime.type.Struct;
 import lucee.runtime.type.util.KeyConstants;
@@ -139,14 +141,16 @@ public class AbstractEntityTuplizerImpl extends AbstractEntityTuplizer {
 	@Override
 	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
 				//not sure I did this right. may need to first get propertyaccessstrategy and buildstrategy from there.
-		return mappedProperty.getGetter(mappedEntity.getMappedClass());
-		//return buildPropertyAccess(mappedProperty).getGetter( null, mappedProperty.getName() );
+		//first attempt//return mappedProperty.getGetter(mappedEntity.getMappedClass());
+		return new CFCGetter(mappedProperty.getName()); //will blow up if backref? maybe...
+		//oldlucee//return buildPropertyAccess(mappedProperty).getGetter( null, mappedProperty.getName() );
 	}
 
 	@Override
 	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
-		return mappedProperty.getSetter(mappedEntity.getMappedClass());
-		//return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
+		return new CFCSetter(mappedProperty.getName()); //will blow up if backref? maybe...
+		//return mappedProperty.getSetter(mappedEntity.getMappedClass());
+		//oldlucee//return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
 	}
 
 	@Override
