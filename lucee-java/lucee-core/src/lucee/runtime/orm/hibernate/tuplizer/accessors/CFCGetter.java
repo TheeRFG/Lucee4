@@ -4,17 +4,17 @@
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either 
+ * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public 
+ *
+ * You should have received a copy of the GNU Lesser General Public
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  **/
 package lucee.runtime.orm.hibernate.tuplizer.accessors;
 
@@ -39,6 +39,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.internal.MapMember;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.Type;
 
@@ -53,16 +54,16 @@ public class CFCGetter implements Getter {
 	public CFCGetter(String key){
 		this(CommonUtil.createKey(key));
 	}
-	
+
 	/**
 	 * Constructor of the class
-	 * @param engine 
+	 * @param engine
 	 * @param key
 	 */
 	public CFCGetter( Collection.Key key){
 		this.key=key;
 	}
-	
+
 	public Object get(Object trg) throws HibernateException {
 		try {
 			// MUST cache this, perhaps when building xml
@@ -77,30 +78,31 @@ public class CFCGetter implements Getter {
 
 			Object rtn = cfc.getComponentScope().get(key,null);
 			return HibernateCaster.toSQL(type, rtn,null);
-		} 
+		}
 		catch (PageException pe) {
 			throw new HibernatePageException(pe);
 		}
 	}
-	
+
 
 	public HibernateORMEngine getHibernateORMEngine(){
 		try {
 			// TODO better impl
 			return HibernateUtil.getORMEngine(CommonUtil.pc());
-		} 
+		}
 		catch (PageException e) {}
-			
+
 		return null;
 	}
-	
+
 
 	public Object getForInsert(Object trg, Map arg1, SharedSessionContractImplementor arg2)throws HibernateException {
 		return get(trg);// MUST better solution? this is from MapGetter
 	}
 
 	public Member getMember() {
-		return null;
+		return new MapMember(key.getString(), getReturnType());
+		//return null;
 	}
 
 	@Override
