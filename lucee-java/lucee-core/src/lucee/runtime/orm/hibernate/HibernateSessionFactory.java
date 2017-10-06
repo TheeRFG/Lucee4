@@ -55,11 +55,15 @@ import lucee.runtime.reflection.Reflector;
 import lucee.runtime.type.Collection.Key;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-import org.hibernate.tool.hbm2ddl.SchemaUpdateTask;
+import org.hibernate.tool.schema.TargetType;
 import org.w3c.dom.Document;
 
 
@@ -72,7 +76,7 @@ public class HibernateSessionFactory {
 	public static final String HIBERNATE_3_DOCTYPE_DEFINITION = "<!DOCTYPE hibernate-mapping PUBLIC \""+HIBERNATE_3_PUBLIC_ID+"\" \""+HIBERNATE_3_SYSTEM_ID+"\">";
 
 
-	public static Configuration createConfiguration(Log log,String mappings, DatasourceConnection dc, SessionFactoryData data) throws SQLException, IOException, PageException {
+	public static Configuration createConfiguration(Log log, String mappings, DatasourceConnection dc, SessionFactoryData data) throws SQLException, IOException, PageException {
 		/*
 		 autogenmap
 		 cacheconfig
@@ -123,6 +127,7 @@ public class HibernateSessionFactory {
 
 		Resource cacheConfig = ormConf.getCacheConfig();
 		Configuration configuration = new Configuration();
+		org.hibernate.boot.MetadataSources metadataSources = new org.hibernate.boot.MetadataSources();
 
 		// ormConfig
 		Resource conf = ormConf.getOrmConfig();
@@ -130,6 +135,7 @@ public class HibernateSessionFactory {
 			try {
 				Document doc = CommonUtil.toDocument(conf,null);
 				configuration.configure(doc);
+				metadataSources.addDocument(doc);
 			}
 			catch (Throwable t) {
 				LogUtil.log(log, Log.LEVEL_ERROR, "hibernate", t);
@@ -140,10 +146,15 @@ public class HibernateSessionFactory {
 		try (InputStream stream = new ByteArrayInputStream(mappings.getBytes(StandardCharsets.UTF_8))){
 			//configuration.addXML(mappings);
 			configuration.addInputStream(stream);
+			metadataSources.addInputStream(stream);
 		}
 		catch(MappingException me){
 			throw ExceptionUtil.createException(data,null, me);
 		}
+
+		StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
+		standardServiceRegistryBuilder.applySetting("hibernate.connection.driver_class", ds.getClazz().getName())
+		.applySetting("hibernate.connection.url", ds.getDsnTranslated());
 
 		configuration
 
@@ -151,10 +162,23 @@ public class HibernateSessionFactory {
         .setProperty("hibernate.connection.driver_class", ds.getClazz().getName())
     	.setProperty("hibernate.connection.url", ds.getDsnTranslated());
 		if(!StringUtil.isEmpty(ds.getUsername())) {
+			standardServiceRegistryBuilder.applySetting("hibernate.connection.username", ds.getUsername());
 			configuration.setProperty("hibernate.connection.username", ds.getUsername());
-			if(!StringUtil.isEmpty(ds.getPassword()))
+			if(!StringUtil.isEmpty(ds.getPassword())) {
+				standardServiceRegistryBuilder.applySetting("hibernate.connection.password", ds.getPassword());
 				configuration.setProperty("hibernate.connection.password", ds.getPassword());
+			}
 		}
+		standardServiceRegistryBuilder
+				.applySetting("hibernate.transaction.flush_before_completion", "false")
+				.applySetting("hibernate.transaction.auto_close_session", "false")
+				.applySetting("hibernate.dialect", dialect)
+				.applySetting("hibernate.current_session_context_class", "thread")
+				.applySetting("hibernate.show_sql", CommonUtil.toString(ormConf.logSQL()))
+				.applySetting("hibernate.format_sql", CommonUtil.toString(ormConf.logSQL()))
+				.applySetting("hibernate.cache.use_second_level_cache", "false")
+				.applySetting("hibernate.exposeTransactionAwareSessionFactory", "false")
+				.applySetting("hibernate.default_entity_mode", "dynamic-map");
     	//.setProperty("hibernate.connection.release_mode", "after_transaction")
     	configuration.setProperty("hibernate.transaction.flush_before_completion", "false")
     	.setProperty("hibernate.transaction.auto_close_session", "false")
@@ -179,20 +203,29 @@ public class HibernateSessionFactory {
 		//.setProperty("hibernate.hbm2ddl.auto", "create")
 		.setProperty("hibernate.default_entity_mode", "dynamic-map");
 
-		if(!Util.isEmpty(ormConf.getCatalog()))
+		if(!Util.isEmpty(ormConf.getCatalog())) {
+			standardServiceRegistryBuilder.applySetting("hibernate.default_catalog", ormConf.getCatalog());
 			configuration.setProperty("hibernate.default_catalog", ormConf.getCatalog());
+		}
 		if(!Util.isEmpty(ormConf.getSchema()))
+			standardServiceRegistryBuilder.applySetting("hibernate.default_schema",ormConf.getSchema());
 			configuration.setProperty("hibernate.default_schema",ormConf.getSchema());
 
 
 		if(ormConf.secondaryCacheEnabled() && false){
-			if(cacheConfig!=null && cacheConfig.isFile())
-				configuration.setProperty("hibernate.cache.provider_configuration_file_resource_path",cacheConfig.getAbsolutePath());
-			if(regionFactory!=null || Reflector.isInstaneOf(cacheProvider, RegionFactory.class))
+			if(cacheConfig!=null && cacheConfig.isFile()) {
+				standardServiceRegistryBuilder.applySetting("hibernate.cache.provider_configuration_file_resource_path", cacheConfig.getAbsolutePath());
+				configuration.setProperty("hibernate.cache.provider_configuration_file_resource_path", cacheConfig.getAbsolutePath());
+			}
+			if(regionFactory!=null || Reflector.isInstaneOf(cacheProvider, RegionFactory.class)) {
+				standardServiceRegistryBuilder.applySetting("hibernate.cache.region.factory_class", cacheProvider);
 				configuration.setProperty("hibernate.cache.region.factory_class", cacheProvider);
-			else
+			}
+			else {
+				standardServiceRegistryBuilder.applySetting("hibernate.cache.provider_class", cacheProvider);
 				configuration.setProperty("hibernate.cache.provider_class", cacheProvider);
-
+			}
+			standardServiceRegistryBuilder.applySetting("hibernate.cache.use_query_cache", "true");
 			configuration.setProperty("hibernate.cache.use_query_cache", "true");
 
 	    	//hibernate.cache.provider_class=org.hibernate.cache.EhCacheProvider
@@ -204,22 +237,38 @@ public class HibernateSessionFactory {
 	    <!ATTLIST tuplizer class CDATA #REQUIRED>                           <!-- the tuplizer class to use -->
 		*/
 
-		schemaExport(log,configuration,dc,data);
+		schemaExport(log, standardServiceRegistryBuilder.build(), dc,data);
 
 		return configuration;
 	}
 
-	private static void schemaExport(Log log,Configuration configuration, DatasourceConnection dc, SessionFactoryData data) throws PageException, SQLException, IOException {
+	private static void schemaExport(Log log, StandardServiceRegistry serviceRegistry, DatasourceConnection dc, SessionFactoryData data) throws PageException, SQLException, IOException {
 		ORMConfiguration ormConf = data.getORMConfiguration();
 
 		if(ORMConfiguration.DBCREATE_NONE==ormConf.getDbCreate()) {
 			return;
 		}
+		//Solution grabbed from https://www.programcreek.com/java-api-examples/index.php?api=org.hibernate.boot.spi.MetadataImplementor
+		/*
+
+	Configuration configuration = sfBean.getConfiguration();
+	// MetadataImplementor???????
+	MetadataSources metadataSources = (MetadataSources) FieldUtils.readField(configuration, "metadataSources", true);
+	Metadata metadata = metadataSources
+	    .getMetadataBuilder(configuration.getStandardServiceRegistryBuilder().build())
+	    .applyPhysicalNamingStrategy(new OrmNamingStrategy())
+	    .applyImplicitNamingStrategy(ImplicitNamingStrategyJpaCompliantImpl.INSTANCE)
+	    .build();
+	return (MetadataImplementor) metadata;
+		 */
 		else if(ORMConfiguration.DBCREATE_DROP_CREATE==ormConf.getDbCreate()) {
 			//SchemaExport export = new SchemaExport(configuration);
 			SchemaExport export = new SchemaExport();
 			export.setHaltOnError(true);
+			Metadata metadata = new MetadataSources(serviceRegistry).buildMetadata();
+			export.create(EnumSet.of(TargetType.DATABASE), metadata);
 
+			//export.execute(EnumSet.of(TargetType.DATABASE), SchemaExport.Action.CREATE, metadata, serviceRegistry);
 			//export.execute(false,true,false,false);
             printError(log,data,export.getExceptions(),false);
             executeSQLScript(ormConf,dc);
@@ -229,6 +278,7 @@ public class HibernateSessionFactory {
 			//need to figure out how to set the execute target based off configuration. EMS uses this, so will have to be figured out.
 				//could maybe use schemaupdatehelper, schemaupdatetask
 			SchemaUpdate update = new SchemaUpdate();
+			update.execute(EnumSet.of(TargetType.DATABASE), new MetadataSources(serviceRegistry).buildMetadata());
             update.setHaltOnError(true);
             //update.execute(false, true);
             //printError(log,data,update.getExceptions(),false);
