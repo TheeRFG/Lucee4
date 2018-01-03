@@ -681,23 +681,16 @@ public final class StringUtil {
 		if ( findLen == 0 )
 			return input;
 
-		String scan = input;
-
-        if ( ignoreCase ) {
-            
-            scan = scan.toLowerCase();
-            find = find.toLowerCase();
-        }
-        else if ( findLen == repl.length() ) {
+		if (!ignoreCase && findLen == repl.length() ) {
 
         	if ( find.equals( repl ) )
         		return input;
-        	
+
         	if ( !firstOnly && findLen == 1 )
         		return input.replace( find.charAt(0), repl.charAt(0) );
         }
 
-		int pos = scan.indexOf( find );
+		int pos = ignoreCase?indexOfIgnoreCase(input, find):input.indexOf( find );
 
 		if (pos == -1)
 			return input;
@@ -715,7 +708,7 @@ public final class StringUtil {
             if ( firstOnly )
             	break;
 
-			pos = scan.indexOf( find, start );
+			pos = ignoreCase?indexOfIgnoreCase(input, find, start ):input.indexOf(find, start );
         }
                 
         if ( input.length() > start )
@@ -785,9 +778,16 @@ public final class StringUtil {
 	}
 	
 	public static int indexOfIgnoreCase(String haystack, String needle) {
+		return indexOfIgnoreCase(haystack, needle, 0);
+	}
+
+	public static int indexOfIgnoreCase(String haystack, String needle, int offset) {
 		if(StringUtil.isEmpty(haystack) || StringUtil.isEmpty(needle)) return -1;
 		needle=needle.toLowerCase();
-		
+
+		if(offset>0) haystack=haystack.substring(offset);
+			else offset=0;
+
 		int lenHaystack=haystack.length();
 		int lenNeedle=needle.length();
 		
@@ -800,11 +800,10 @@ public final class StringUtil {
 					if(needle.charAt(y)!=Character.toLowerCase(haystack.charAt(i-(lenNeedle-1)+y)))
 							continue outer;
 				}
-				return i-(lenNeedle-1);
+				return (i-(lenNeedle-1))+offset;
 			}
 		}
-		
-		
+
 		return -1;
 	}
     
