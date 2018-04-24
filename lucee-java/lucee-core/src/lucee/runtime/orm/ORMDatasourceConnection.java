@@ -23,6 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import lucee.commons.lang.ExceptionUtil;
 import lucee.runtime.PageContext;
 import lucee.runtime.db.DataSource;
 import lucee.runtime.db.DatasourceConnection;
@@ -55,6 +56,14 @@ public class ORMDatasourceConnection implements DatasourceConnection {
 	public Connection getConnection() {
 		connection.begin();
 		return connection;
+	}
+	
+	public boolean isAutoCommit() throws SQLException {
+		return connection.getAutoCommit();
+	}
+	
+	public void setAutoCommit(boolean setting) throws SQLException {
+		connection.setAutoCommit(setting);
 	}
 
 	@Override
@@ -91,6 +100,7 @@ public class ORMDatasourceConnection implements DatasourceConnection {
 			try {
 				supportsGetGeneratedKeys=Caster.toBoolean(getConnection().getMetaData().supportsGetGeneratedKeys());
 			} catch (Throwable t) {
+				ExceptionUtil.rethrowIfNecessary(t);
 				return false;
 			}
 		}

@@ -57,6 +57,7 @@ import lucee.commons.io.res.filter.ResourceFilter;
 import lucee.commons.io.res.util.ResourceUtil;
 import lucee.commons.lang.ClassException;
 import lucee.commons.lang.ClassUtil;
+import lucee.commons.lang.ExceptionUtil;
 import lucee.commons.lang.IDGenerator;
 import lucee.commons.lang.StringUtil;
 import lucee.commons.net.JarLoader;
@@ -556,7 +557,9 @@ public final class Admin extends TagImpl implements DynamicAttributes {
     			if(config instanceof ConfigServer)
     				((PageContextImpl)pageContext).setServerPassword(password);
     		}
-    		catch(Throwable t){}
+    		catch(Throwable t){
+    			ExceptionUtil.rethrowIfNecessary(t);
+    		}
     		
     		
     		
@@ -836,7 +839,9 @@ public final class Admin extends TagImpl implements DynamicAttributes {
     	try{
     		doUpdateJars();
     	}
-    	catch(Throwable t){}
+    	catch(Throwable t){
+			ExceptionUtil.rethrowIfNecessary(t);
+		}
     	admin.runUpdate(password);
         adminSync.broadcast(attributes, config);
     }
@@ -1081,7 +1086,9 @@ public final class Admin extends TagImpl implements DynamicAttributes {
                             msg.append(Caster.toString(((Struct)context.getE(1)).get("line")));
                     	}
                     	}
-                    	catch(Throwable t){}
+                    	catch(Throwable t){
+                			ExceptionUtil.rethrowIfNecessary(t);
+                		}
                     	
                     }
                     msg.append("]");
@@ -2710,6 +2717,9 @@ public final class Admin extends TagImpl implements DynamicAttributes {
         	throw new DatabaseException("can't find class ["+classname+"] for jdbc driver, check if driver (jar file) is inside lib folder",e.getMessage(),null,null,null);
         }*/
         
+        boolean literalTimestampWithTSOffset=getBoolV("literalTimestampWithTSOffset", false);
+        
+        
         String dsn=getString("admin",action,"dsn");
         String name=getString("admin",action,"name");
         String newName=getString("admin",action,"newName");
@@ -2733,7 +2743,7 @@ public final class Admin extends TagImpl implements DynamicAttributes {
         //config.getDatasourceConnectionPool().remove(name);
         DataSource ds=null;
 		try {
-			ds = new DataSourceImpl(name,classname,host,dsn,database,port,username,password,connLimit,connTimeout,metaCacheTimeout,blob,clob,allow,custom,false,validate,storage,null, dbdriver);
+			ds = new DataSourceImpl(name,classname,host,dsn,database,port,username,password,connLimit,connTimeout,metaCacheTimeout,blob,clob,allow,custom,false,validate,storage,null, dbdriver,literalTimestampWithTSOffset);
 		} catch (ClassException e) {
 			throw new DatabaseException(
 					"can't find class ["+classname+"] for jdbc driver, check if driver (jar file) is inside lib folder ("+e.getMessage()+")",null,null,null);
@@ -2761,7 +2771,8 @@ public final class Admin extends TagImpl implements DynamicAttributes {
                 storage,
                 timezone,
                 custom,
-		        dbdriver
+		        dbdriver,
+		        literalTimestampWithTSOffset
         );
         store();
         adminSync.broadcast(attributes, config);
@@ -2983,6 +2994,7 @@ public final class Admin extends TagImpl implements DynamicAttributes {
 			new RemoteClientTask(null,client,attrColl,getCallerId(),"synchronisation").execute(config);
 		} 
     	catch (Throwable t) {
+    		ExceptionUtil.rethrowIfNecessary(t);
 			throw Caster.toPageException(t);
 		}
     }
@@ -3779,7 +3791,9 @@ public final class Admin extends TagImpl implements DynamicAttributes {
 				}
 				qry.setAt("triesmax", row,Caster.toDouble(triesMax));
 			}
-			catch(Throwable t){}
+			catch(Throwable t){
+				ExceptionUtil.rethrowIfNecessary(t);
+			}
 		}
     	return row;
 	}
@@ -3829,6 +3843,7 @@ public final class Admin extends TagImpl implements DynamicAttributes {
 		try {
 			_doSetCluster();
 		} catch (Throwable t) {
+			ExceptionUtil.rethrowIfNecessary(t);
 			//print.printST(t);
 		}
 	}
@@ -4680,7 +4695,9 @@ public final class Admin extends TagImpl implements DynamicAttributes {
 				try{
 				sct.setEL(cw.getId(), ((CFMLFactoryImpl)cw.getFactory()).getInfo());
 				}
-				catch(Throwable t){}
+				catch(Throwable t){
+					ExceptionUtil.rethrowIfNecessary(t);
+				}
 			}
 			pageContext.setVariable(getString("admin",action,"returnVariable"),sct);
 			
