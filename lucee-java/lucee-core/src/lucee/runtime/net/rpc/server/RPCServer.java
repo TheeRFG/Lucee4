@@ -45,6 +45,7 @@ import lucee.commons.lang.ClassException;
 import lucee.commons.lang.ClassUtil;
 import lucee.commons.lang.ExceptionUtil;
 import lucee.runtime.Component;
+import lucee.runtime.PageContext;
 import lucee.runtime.exp.PageException;
 import lucee.runtime.exp.PageServletException;
 import lucee.runtime.net.http.ReqRspUtil;
@@ -284,6 +285,7 @@ public final class RPCServer{
 			msgContext.setRequestMessage(requestMsg);
 			String url = HttpUtils.getRequestURL(req).toString().toLowerCase();
 			msgContext.setProperty(MessageContext.TRANS_URL, url);
+			msgContext.setProperty(MessageContext.WSDLGEN_INTFNAMESPACE, AxisCaster.getRequestNameSpace());
 			// put character encoding of request to message context
 			// in order to reuse it during the whole process.
 			 
@@ -749,6 +751,7 @@ public final class RPCServer{
 						Method pluginMethod = plugin.getDeclaredMethod("invoke", new Class[] {msgContext.getClass()});
 
 						msgContext.setProperty(MessageContext.TRANS_URL, HttpUtils.getRequestURL(request).toString().toLowerCase());
+						msgContext.setProperty(MessageContext.WSDLGEN_INTFNAMESPACE, AxisCaster.getRequestNameSpace());
 						//msgContext.setProperty(MessageContext.TRANS_URL, "http://DefaultNamespace");
 						msgContext.setProperty(HTTPConstants.PLUGIN_SERVICE_NAME, serviceName);
 						msgContext.setProperty(HTTPConstants.PLUGIN_NAME,handlerName);
@@ -816,10 +819,11 @@ public final class RPCServer{
 		return axisServer;
 	}
 	
-	public static RPCServer getInstance(int id, ServletContext servletContext) throws AxisFault {
-		RPCServer server=(RPCServer) servers.get(Caster.toString(id));
+	public static RPCServer getInstance( PageContext pc, Component cfc) throws AxisFault {
+		String key = pc.getRootTemplateDirectory() + Caster.toString(pc.getId()) + cfc.getName();
+		RPCServer server=(RPCServer) servers.get(key);
 		if(server==null){
-			servers.put(Caster.toString(id), server=new RPCServer(servletContext));
+			servers.put(key, server=new RPCServer(pc.getServletContext()));
 		}
 		return server;
 	}
@@ -829,8 +833,7 @@ public final class RPCServer{
 
 	public void registerTypeMapping(Class clazz) {
 		String fullname = clazz.getName();//,name,packages;
-		//registerTypeMapping(clazz, new QName(AxisCaster.getRequestNameSpace(),fullname));
-		registerTypeMapping(clazz, new QName(AxisCaster.getRequestDefaultNameSpace(),fullname));
+		registerTypeMapping(clazz, new QName(AxisCaster.getRequestNameSpace(),fullname));
 	}
 	
 	private void registerTypeMapping(Class clazz,QName qname) {

@@ -42,7 +42,7 @@ public class DatasourceConnectionPool {
 	
 	private ConcurrentHashMap<String,DCStack> dcs=new ConcurrentHashMap<String,DCStack>();
 	private Map<String,RefInteger> counter=new ConcurrentHashMap<String,RefInteger>();
-	
+
 	public DatasourceConnection getDatasourceConnection(DataSource datasource, String user, String pass) throws PageException {
 		// pc=ThreadLocalPageContext.get(pc);
 		if(StringUtil.isEmpty(user)) {
@@ -50,11 +50,10 @@ public class DatasourceConnectionPool {
             pass=datasource.getPassword();
         }
         if(pass==null)pass="";
-		
+
 		// get stack
 		DCStack stack=getDCStack(datasource,user,pass);
-		
-		
+
 		// max connection
 		int max=datasource.getConnectionLimit();
 		
@@ -91,7 +90,6 @@ public class DatasourceConnectionPool {
 		// create a new connection
 		if(rtn==null)
 			rtn=loadDatasourceConnection(datasource, user, pass);
-		
 		synchronized (stack) {
 			_inc(datasource);
 		}
