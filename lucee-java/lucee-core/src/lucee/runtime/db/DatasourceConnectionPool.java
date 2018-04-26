@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import lucee.commons.db.DBUtil;
 import lucee.commons.io.IOUtil;
+import lucee.commons.lang.ExceptionUtil;
 import lucee.commons.lang.StringUtil;
 import lucee.commons.lang.types.RefInteger;
 import lucee.commons.lang.types.RefIntegerImpl;
@@ -54,41 +55,41 @@ public class DatasourceConnectionPool {
 		DCStack stack=getDCStack(datasource,user,pass);
 
 		// max connection
-		int max = datasource.getConnectionLimit();
-
+		int max=datasource.getConnectionLimit();
+		
 		// get an existing connection
-		DatasourceConnectionImpl rtn = null;
+		DatasourceConnectionImpl rtn=null;
 		do {
 			// we have a bad connection
-			if (rtn != null) {
+			if(rtn!=null) {
 				IOUtil.closeEL(rtn.getConnection());
-				rtn = null;
+				rtn=null;
 			}
 			synchronized (stack) {
-				while (max != -1 && max <= _size(datasource)) {
+				while(max!=-1 && max<=_size(datasource)) {
 					try {
 						//stack.inc();
 						stack.wait(10000L);
-
-					} catch (InterruptedException e) {
+						
+					} 
+					catch (InterruptedException e) {
 						throw Caster.toPageException(e);
 					}
 				}
-
-				while (!stack.isEmpty()) {
-					DatasourceConnectionImpl dc = (DatasourceConnectionImpl) stack.get();
-					if (dc != null) {
-						rtn = dc;
+				
+				while(!stack.isEmpty()) {
+					DatasourceConnectionImpl dc=(DatasourceConnectionImpl) stack.get();
+					if(dc!=null){
+						rtn=dc;
 						break;
 					}
 				}
 			}
-		} while (rtn != null && !isValid(rtn, Boolean.TRUE));
-
+		}while(rtn!=null && !isValid(rtn,Boolean.TRUE));
+		
 		// create a new connection
-		if (rtn == null)
-			rtn = loadDatasourceConnection(datasource, user, pass);
-
+		if(rtn==null)
+			rtn=loadDatasourceConnection(datasource, user, pass);
 		synchronized (stack) {
 			_inc(datasource);
 		}
@@ -154,7 +155,9 @@ public class DatasourceConnectionPool {
 				//size+=conns.size();
 			}
 		}
-		catch(Throwable t){}
+		catch(Throwable t){
+        	ExceptionUtil.rethrowIfNecessary(t);
+        }
 	}
 
 	public void remove(DataSource datasource) {
@@ -180,18 +183,26 @@ public class DatasourceConnectionPool {
 		try {
 			if(dc.getConnection().isClosed())return false;
 		} 
-		catch (Throwable t) {return false;}
+		catch (Throwable t) {
+        	ExceptionUtil.rethrowIfNecessary(t);
+        	return false;
+        }
 
 		try {
 			if(dc.getDatasource().validate() && !DataSourceUtil.isValid(dc,10))return false;
 		} 
-		catch (Throwable t) {} // not all driver support this, because of that we ignore a error here, also protect from java 5
+		catch (Throwable t) {
+        	ExceptionUtil.rethrowIfNecessary(t);
+        } // not all driver support this, because of that we ignore a error here, also protect from java 5
 		
 		
 		try {
 			if(autoCommit!=null) dc.getConnection().setAutoCommit(autoCommit.booleanValue());
 		} 
-		catch (Throwable t) {return false;}
+		catch (Throwable t) {
+        	ExceptionUtil.rethrowIfNecessary(t);
+        	return false;
+        }
 		
 		
 		return true;
