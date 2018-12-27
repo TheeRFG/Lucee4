@@ -135,6 +135,7 @@ public class HibernateSessionFactory {
 				configuration.configure(doc);
 			}
 			catch (Throwable t) {
+				lucee.commons.lang.ExceptionUtil.rethrowIfNecessary(t);
 				LogUtil.log(log, Log.LEVEL_ERROR, "hibernate", t);
 
 			}
@@ -314,9 +315,11 @@ public class HibernateSessionFactory {
 			try {
 				Component base = data.getEntityByCFCName(ext, false);
 				ext=HibernateCaster.getEntityName(base);
-			} catch (Throwable t) {}
-
-
+			} catch (Throwable t) {
+				lucee.commons.lang.ExceptionUtil.rethrowIfNecessary(t);
+			}
+			
+			
 			ext=HibernateUtil.id(CommonUtil.last(ext, '.').trim());
 			if(!done.contains(ext)) {
 				v = data.getCFC(ext,null);

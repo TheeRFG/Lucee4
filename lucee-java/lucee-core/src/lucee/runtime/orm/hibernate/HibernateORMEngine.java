@@ -339,8 +339,11 @@ public class HibernateORMEngine implements ORMEngine {
 				Document doc=null;
 				try {
 					doc=CommonUtil.newDocument();
-				}catch(Throwable t){t.printStackTrace();}
-
+				}catch(Throwable t){
+					lucee.commons.lang.ExceptionUtil.rethrowIfNecessary(t);
+					t.printStackTrace();
+				}
+				
 				root=doc.createElement("hibernate-mapping");
 				doc.appendChild(root);
 				pc.addPageSource(cfc.getPageSource(), true);

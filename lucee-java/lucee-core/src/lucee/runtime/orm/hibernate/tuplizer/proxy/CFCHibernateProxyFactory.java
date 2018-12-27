@@ -22,6 +22,8 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
 
+import lucee.commons.lang.ExceptionUtil;
+
 import org.luceehibernate.HibernateException;
 import org.luceehibernate.engine.SessionImplementor;
 import org.luceehibernate.mapping.PersistentClass;
@@ -56,6 +58,7 @@ public class CFCHibernateProxyFactory implements ProxyFactory {
 			return new CFCHibernateProxy(new CFCLazyInitializer(entityName, id, session));
 		}
 		catch(Throwable t){
+			ExceptionUtil.rethrowIfNecessary(t);
 			return new CFCHibernateProxy(new CFCLazyInitializer(nodeName, id, session));
 		}
 	}
