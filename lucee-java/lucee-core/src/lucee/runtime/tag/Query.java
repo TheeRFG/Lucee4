@@ -472,7 +472,7 @@ public final class Query extends BodyTagTryCatchFinallyImpl {
 	public int doStartTag() throws PageException	{
 
 		//timeout not defined
-		if(timeout==null || ((int)timeout.getSeconds())<=0) { // not set
+		/*if(timeout==null || ((int)timeout.getSeconds())<=0) { // not set
 			this.timeout=PageContextUtil.remainingTime(pageContext,true);
 		}
 		// timeout bigger than remaining time
@@ -480,7 +480,7 @@ public final class Query extends BodyTagTryCatchFinallyImpl {
 			TimeSpan remaining = PageContextUtil.remainingTime(pageContext,true);
 			if(timeout.getSeconds()>remaining.getSeconds())
 				timeout=remaining;
-		}
+		}*/
 		
 		
 		
